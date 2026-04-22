@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Nae Tool</title>
+
+<style>
+body{margin:0;font-family:Arial;color:#00ffea;background:#000}
+.box{width:420px;margin:30px auto;background:#111;padding:20px;border-radius:10px;border:1px solid #00ffc8}
+.row{margin:10px 0}
+.tai{color:#0f0}.xiu{color:#f44}
+.his{max-height:150px;overflow:auto;background:#000;padding:10px;border-radius:6px;border:1px solid #00ffc8;font-size:13px}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2 align="center">Nae Tool</h2>
+
+<div class="row">Phiên: <span id="p">--</span></div>
+<div class="row">Xúc xắc: <span id="x">--</span></div>
+<div class="row">Tổng: <span id="t">--</span></div>
+<div class="row">KQ: <span id="k">--</span></div>
+
+<hr>
+
+<div class="row">Dự đoán: <span id="d">--</span></div>
+<div class="row">Xác suất: <span id="s">--</span>%</div>
+
+<hr>
+
+<div class="row">Lịch sử:</div>
+<div id="h" class="his"></div>
+</div>
+
+<script>
+
+// ===== API =====
+const API = "https://sunlaymaynkx.hacksieucap.pro/sunlon";
+
+// ===== DATA =====
+let _a=[],_e=0,_lp=null,_ld=null;
+
+// ===== HISTORY =====
+function _h(p,pr,re){
+let d=document.getElementById("h");
+let ok=pr===re;
+let el=document.createElement("div");
+el.innerHTML=`#${p} | <span class="${pr==="Tài"?"tai":"xiu"}">${pr}</span> → <span class="${re==="Tài"?"tai":"xiu"}">${re}</span> | ${ok?"✅":"❌"}`;
+d.prepend(el);
+}
+
+// ===== AI =====
+function _ai(d,s,xx){
+let t=0,a;
+try{a=xx.split("-");t=a.reduce((x,y)=>x+(+y||0),0)}catch{}
+d=d.slice(-50);
+let c=d[d.length-1],b=0;
+for(let i=d.length-1;i>=0;i--){if(d[i]===c)b++;else break}
+
+if(s>=5)return[t>=11?"Tài":"Xỉu",75];
+if(s>=3)return[c==="Tài"?"Xỉu":"Tài",85];
+if(b>=4)return[c==="Tài"?"Xỉu":"Tài",87];
+if(b>=2)return[c,80];
+return[t>=11?"Tài":"Xỉu",70];
+}
+
+// ===== MAIN =====
+async function _run(){
+try{
+let r=await fetch(API);
+let j=await r.json();
+
+if(!j||!j.xuc_xac_1)return;
+
+let p=j.phien;
+let xx=`${j.xuc_xac_1}-${j.xuc_xac_2}-${j.xuc_xac_3}`;
+let t=j.tong;
+let k=j.ket_qua;
+
+if(p!==_lp){
+
+document.getElementById("p").innerText=p;
+document.getElementById("x").innerText=xx;
+document.getElementById("t").innerText=t;
+
+document.getElementById("k").innerHTML=
+k==="Tài"?`<span class="tai">${k}</span>`:`<span class="xiu">${k}</span>`;
+
+if(_ld!==null){
+_h(p,_ld,k);
+if(_ld===k)_e=0;else _e++;
+}
+
+_a.push(k);
+
+let rs=_ai(_a,_e,xx);
+
+document.getElementById("d").innerHTML=
+rs[0]==="Tài"?`<span class="tai">${rs[0]}</span>`:`<span class="xiu">${rs[0]}</span>`;
+
+document.getElementById("s").innerText=rs[1];
+
+_ld=rs[0];
+_lp=p;
+}
+
+}catch(e){
+console.log("API lỗi:", e);
+}
+}
+
+_run();
+setInterval(_run,4000);
+
+</script>
+
+</body>
+</html>
